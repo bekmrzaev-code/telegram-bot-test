@@ -1,16 +1,16 @@
-import OpenAI from 'openai';
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// import OpenAI from 'openai';
+// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function improveCV(text) {
-    const prompt = `
-  Make this CV professional, clear and ATS-friendly:
-  ${text}
-  `;
+// export async function improveCV(text) {
+//     const prompt = `
+//   Make this CV professional, clear and ATS-friendly:
+//   ${text}
+//   `;
 
-    const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }]
-    });
+//     const response = await openai.chat.completions.create({
+//         model: 'gpt-4o-mini',
+//         messages: [{ role: 'user', content: prompt }]
+//     });
 
-    return response.choices[0].message.content;
-}
+//     return response.choices[0].message.content;
+// }
