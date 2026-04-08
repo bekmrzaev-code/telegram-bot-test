@@ -1,19 +1,58 @@
-const { saveUser } = require("../services/userService");
-const { mainMenu } = require("../utils/keyboard");
+    const Driver = require("../models/driver");
 
-module.exports = async (bot, msg) => {
-    const userId = msg.from.id;
-    const name = msg.from.first_name || "";
-    const surname = msg.from.last_name || "";
-    const username = msg.from.username || "";
-    const language = msg.from.language_code || "en";
+    module.exports = (bot) => {
 
-    try {
-        const user = await saveUser({ telegramId: userId, name, surname, username, language });
-        console.log(`👤 User saved: ${name} (@${username}) | ID: ${userId}`);
-        bot.sendMessage(userId, "👋 Welcome to Anonymous Chat!", mainMenu);
-    } catch (err) {
-        console.error("❌ Failed to save user:", err);
-        bot.sendMessage(userId, "❌ Something went wrong, please try again.");
-    }
-};
+        bot.start(async (ctx) => {
+            // ✅ session mavjudligini tekshirish
+            if (!ctx.session) ctx.session = {};
+
+            // Admin login
+            if (ctx.from.id == process.env.ADMIN_TELEGRAM_ID) {
+                ctx.session.isAdmin = true;
+                ctx.reply("Welcome Admin 👑", {
+                    reply_markup: {
+                        keyboard: [
+                            ["👨‍✈️ Drivers List", "➕ Add Driver"],
+                            ["🏢 Add Company"]
+                        ],
+                        resize_keyboard: true
+                    }
+                });
+                return;
+            }
+
+            // Driver login
+            ctx.session.isAdmin = false;
+            ctx.reply("Enter your CDL number:");
+        });
+
+        bot.on("text", async (ctx) => {
+            // ✅ session tekshirish
+            if (!ctx.session) ctx.session = {};
+
+            // Agar admin bo‘lsa, startHandler orqali driver tekshiruvi ishlamasin
+            if (ctx.session.isAdmin) return;
+
+            const input = ctx.message.text;
+            console.log("id", ctx.from.id, "input", input);
+
+            // CDL raqam bo‘yicha driver tekshirish
+            const driver = await Driver.findOne({ cdl_number: input });
+            if (!driver) return ctx.reply("You are not registered.");
+
+            // Telegram ID saqlash
+            driver.telegram_id = ctx.from.id;
+            await driver.save();
+
+            // Driverga xabar
+            ctx.reply(`Hello Mr ${driver.name}`);
+            ctx.reply("Choose:", {
+                reply_markup: {
+                    keyboard: [
+                        ["📤 Upload Documents", "📊 Check Status"]
+                    ],
+                    resize_keyboard: true
+                }
+            });
+        });
+    };

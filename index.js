@@ -1,10 +1,12 @@
 require("dotenv").config();
 const express = require("express");
 const connectDB = require("./src/config/db");
-require("./src/bot/bot");
+const startBot = require("./src/bot/bot");
 
 const app = express();
 connectDB();
+
+startBot();
 
 app.get("/", (req, res) => res.send("Bot is running"));
 

@@ -1,14 +1,29 @@
-const TelegramBot = require("node-telegram-bot-api");
+const { Telegraf, session } = require("telegraf");
+
+// ✅ Bitta bot instance
+const bot = new Telegraf(process.env.BOT_TOKEN);
+
+// ✅ Session middleware qo‘shish
+bot.use(session());
+
+// handlers
 const startHandler = require("../handlers/startHandler");
-const callbackHandler = require("../handlers/callbackHandler");
-const messageHandler = require("../handlers/messageHandler");
+const driverHandler = require("../handlers/statusCheck");
+const adminHandler = require("../handlers/adminHandler");
+const uploadHandler = require("../handlers/documentUpload");
 
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
+// handlers ulash
+startHandler(bot);
+driverHandler(bot);
+adminHandler(bot);
+uploadHandler(bot);
 
-bot.onText(/\/start/, (msg) => startHandler(bot, msg));
+module.exports = function startBot() {
+    bot.launch()
+        .then(() => console.log("🤖 Bot started"))
+        .catch(err => console.log(err));
 
-bot.on("callback_query", (query) => callbackHandler(bot, query));
-
-bot.on("message", (msg) => messageHandler(bot, msg));
-
-module.exports = bot;
+    // graceful stop
+    process.once("SIGINT", () => bot.stop("SIGINT"));
+    process.once("SIGTERM", () => bot.stop("SIGTERM"));
+};
